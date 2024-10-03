@@ -18,16 +18,21 @@ class ToDoTask(models.Model):
     description = fields.Text(string="Description")
     due_date = fields.Date(string="Due Date", required=True, tracking=True,
                            default=lambda self: self._default_due_date())
+    estimated_time = fields.Integer(string="Estimated Time(H)", required=True, tracking=True)
+    is_late = fields.Boolean(default=False)
 
     # Special
     state = fields.Selection([
         ('new', 'New'),
         ('in_progress', 'In Progress'),
-        ('completed', 'Completed')
+        ('completed', 'Completed'),
+        ('close', 'Close')
     ], string="Status", default="new")
+    active = fields.Boolean(default=True)
 
     # Relational
     assign_to = fields.Many2one("res.partner", string="Assign To", required=True, tracking=True)
+    timesheet_ids = fields.One2many("timesheet", "task_id")
 
     # --------------------------------------- SQL Constraints ----------------------------------
     _sql_constraints = [
@@ -54,6 +59,28 @@ class ToDoTask(models.Model):
             else:
                 rec.state = "completed"
         return True
+
+    # server action
+    def todo_task_close_server_action(self):
+        for rec in self:
+            if rec.state == "in_progress":
+                raise exceptions.UserError("An in progress task cannot be closed, You must finish it first.")
+            else:
+                rec.state = "close"
+
+    # automated action
+    def check_due_date(self):
+        task_ids = self.search([("state", "in", ['new', 'in_progress'])])
+        for rec in task_ids:
+            if rec.due_date and rec.due_date < fields.date.today():
+                rec.is_late = True
+
+    # ----------------------------------- Constrains --------------------------------
+    @api.constrains("step_ids")
+    def _check_step_time(self):
+        for rec in self:
+            if rec.estimated_time and rec.estimated_time < sum(rec.timesheet_ids.mapped("time")):
+                raise exceptions.ValidationError("The total times of steps cannot exceed estimated time.")
 
     # ------------------------------------------ CRUD Methods -------------------------------------
     @api.model

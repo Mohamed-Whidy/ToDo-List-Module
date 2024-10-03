@@ -12,6 +12,8 @@
         'security/ir.model.access.csv',
         'views/todo_task_root_menu.xml',
         'views/todo_task_view.xml',
+        'views/timesheet_view.xml',
+        'reports/task_report.xml',
     ],
     'assets': {
             'web.assets_backend': ['todo_management/static/src/css/todo_task.css']

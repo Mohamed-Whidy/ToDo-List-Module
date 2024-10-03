@@ -6,11 +6,14 @@
         <field name="model">todo.task</field>
         <field name="priority" eval="16"/>
         <field name="arch" type="xml">
-            <tree>
+            <tree decoration-success="state == 'completed'" decoration-info="state == 'in_progress'" decoration-muted="state == 'close'"
+                  decoration-primary="state=='new'" decoration-danger="is_late">
                 <field name="name"/>
                 <field name="assign_to"/>
                 <field name="due_date"/>
+                <field name="estimated_time"/>
                 <field name="state"/>
+                <field name="is_late" invisible="1"/>
                 <field name="description" optional="hide"/>
             </tree>
         </field>
@@ -32,24 +35,29 @@
                  <sheet>
                     <div class="oe_title">
                         <h1>
-                            <field name="name" widget="label" placeholder="Task Name" readonly="state=='completed'"/>
+                            <field name="name" widget="label" placeholder="Task Name" readonly="state in ('close','completed')"/>
                         </h1>
                     </div>
                     <br/>
                     <group>
                         <group>
-                            <field name="assign_to" readonly="state=='completed'"/>
-                            <field name="due_date" readonly="state=='completed'"/>
+                            <field name="assign_to" readonly="state in ('close','completed')"/>
+                            <field name="due_date" readonly="state in ('close','completed')"/>
+                            <field name="estimated_time" readonly="state in ('close','completed')"/>
+                            <field name="active" invisible="1"/>
+                            <field name="is_late" invisible="1"/>
                         </group>
                     </group>
                     <br/>
                     <notebook>
                         <page string="Description">
                             <group>
-                                <group>
-                                    <field name="description"/>
-                                </group>
+                                <field name="description"/>
                             </group>
+                        </page>
+                        <page string="Task Steps">
+                            <field name="timesheet_ids" readonly="state in ('new', 'completed', 'close')">
+                            </field>
                         </page>
                     </notebook>
                 </sheet>
@@ -71,6 +79,7 @@
                 <filter string="New Tasks" name="new_tasks" domain="[ ( 'state', '=', 'new') ]"/>
                 <filter string="In Progress Tasks" name="in_progress_tasks" domain="[ ( 'state', '=', 'in_progress') ]"/>
                 <filter string="Completed Tasks" name="completed_tasks" domain="[ ( 'state', '=', 'completed') ]"/>
+                <filter string="Archived Tasks" name="archived_tasks" domain="[ ( 'active', '=', False) ]"/>
                 <!-- Group By -->
                 <group expand="0" string="Group By">
                     <filter string="Assign To" name="group_by_assign_to" context="{'group_by': 'assign_to'}"/>
@@ -81,6 +90,31 @@
                 <field name="assign_to"/>
             </search>
         </field>
+    </record>
+
+
+    <!--  To-Do => To-Do => Server Close Action  -->
+    <record id="todo_task_server_close_action" model="ir.actions.server">
+        <field name="name">Close</field>
+        <field name="model_id" ref="model_todo_task"/>
+        <field name="binding_model_id" ref="model_todo_task"/>
+        <field name="state">code</field>
+        <field name="code">
+            actions = records.todo_task_close_server_action()
+        </field>
+    </record>
+
+
+     <!--  To-Do => To-Do => Automated Action  -->
+    <record id="todo_task_due_date_automated_action" model="ir.cron">
+        <field name="name">Task: check Due Date</field>
+        <field name="model_id" ref="model_todo_task"/>
+        <field name="state">code</field>
+        <field name="code">model.check_due_date()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="numbercall">-1</field>
+        <field name="active">True</field>
     </record>
 
     <!--  To-Do => To-Do => All Tasks action  -->

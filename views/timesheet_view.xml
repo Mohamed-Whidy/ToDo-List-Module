@@ -1,0 +1,23 @@
+
+<odoo>
+
+    <!--  task step =>  Tree view  -->
+    <record id="timesheet_view_tree" model="ir.ui.view">
+        <field name="name">TimeSheet Tree</field>
+        <field name="model">timesheet</field>
+        <field name="priority" eval="16"/>
+        <field name="arch" type="xml">
+            <tree string="Task Steps" editable="bottom">
+                <field name="date"/>
+                <field name="description"/>
+                <field name="time"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="task_step_action" model="ir.actions.act_window">
+        <field name="name">TimeSheet</field>
+        <field name="res_model">timesheet</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+</odoo>

@@ -1,0 +1,66 @@
+<odoo>
+
+    <record id="task_report_action" model="ir.actions.report">
+        <field name="name">Task Report</field>
+        <field name="model">todo.task</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="binding_model_id" ref="model_todo_task"/>
+        <field name="binding_type">report</field>
+        <field name="report_name">todo_management.task_report_template</field>
+    </record>
+
+
+    <template id="task_report_template">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <t t-foreach="docs" t-as="o">
+                    <style>
+                        p
+                        {
+                           padding:0px;
+                           margin:0px;
+                        }
+                    </style>
+                    <div class="page">
+                        <!-- Task Information -->
+                        <div class="task-details">
+                            <p><strong>TASK:           </strong> <span t-field="o.name"/></p>
+                            <p><strong>Due Date:       </strong> <span t-field="o.due_date"/></p>
+                            <p><strong>Assign To:      </strong> <span t-field="o.assign_to"/></p>
+                            <p><strong>Estimated Time: </strong> <span t-field="o.estimated_time"/> H</p>
+                        </div>
+                        <br/>
+                        <!-- Task Description -->
+                        <div class="task-description">
+                            <p><strong>Description:</strong></p>
+                            <p t-esc="o.description"/>
+                        </div>
+
+                        <!-- Timesheet Table -->
+                        <table class="table table-bordered">
+                            <thead>
+                                <th>#</th>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Time</th>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="o.timesheet_ids" t-as="line">
+                                    <tr>
+                                        <td><span t-field="line.id"/></td>
+                                        <td><span t-field="line.date"/></td>
+                                        <td><span t-field="line.description"/></td>
+                                        <td><span t-field="line.time"/> H</td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+
+</odoo>
